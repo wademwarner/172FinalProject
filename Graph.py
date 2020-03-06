@@ -7,11 +7,14 @@ Created on Mar 6, 2020
 
 
 
-class Graph():
-    def _init_(self, graphDict = None):
+class Graph(object):
+    def __init__(self):
+        self.dict = {}
+        '''
         if graphDict == None:
             graphDict = {}
         self.dict = graphDict
+        '''
     
     
     def get_node_list(self): #return the vertices
@@ -53,8 +56,9 @@ class Graph():
         return self.dict[v][w]
     
     def del_edge(self, v, w):
-        self.dict[v][w] = None
-        self.[w][v] = None
+        pass
+        #self.dict[v][w] = None
+        #self.[w][v] = None
         
     def __str__(self):
         vert = 'vertices: '
