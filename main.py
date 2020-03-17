@@ -7,13 +7,10 @@ myWorld = World()
 graphObj = Graph()
 
 for i in range(len(myWorld.Edges)):
-    graphObj.add_node(myWorld.Edges[i][0])
-    graphObj.add_edge(myWorld.Edges[i][0], myWorld.Edges[i][1])
-    #graphObj.setTime(myWorld.Edges[i][0], myWorld.Edges[i][1], myWorld.Edges[i][2])  need to change to get the time working
-    #graphObj.addLine(myWorld.Edges[i][0], myWorld.Edges[i][1], myWorld.Edges[i][3])  need to change all get the line working
+    #graphObj.add_node(myWorld.Edges[i][0])    
+    graphObj.add_edge(myWorld.Edges[i][0], myWorld.Edges[i][1],1) #graphObj.add_edge(myWorld.Edges[i][0], myWorld.Edges[i][1],myWorld.Edges[i][2]) for when we want to add actual time
 print(graphObj.__str__())
-#print(graphObj.getTime(0, 10))
-#print(graphObj.getLine(0,10))
+print(graphObj.getTime(0, 10))
 
 
 print myWorld.Edges 

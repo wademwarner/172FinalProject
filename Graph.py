@@ -9,7 +9,9 @@ Created on Mar 6, 2020
 
 class Graph(object):
     def __init__(self):
-        self.dict = {}
+        self.dict = {} #To store the graphs nodes tht are connect with one and another
+        self.distance = {} #to store the distance between nodes
+        self.edge = {} #store the curvature of the edge 
         '''
         if graphDict == None:
             graphDict = {}
@@ -36,29 +38,41 @@ class Graph(object):
     def del_node(self, v):
         self.dict[v] = None
         
-    def add_edge(self, v, w):  #use v as the from node and w as the to node
-        if v in self.dict:
+    def add_edge(self, v, w, time):  #use v as the from node and w as the to node then add the time between them as well
+        time = 1 #used only for the first part of the project
+        if v not in self.dict:
+            self.dict[v] = []
+        if w not in self.dict:
+            self.dict[w] = []   
+        if v > w:
+            v, w = w, v
+        if (v,w) not in self.distance:
             self.dict[v].append(w)
-        else:
             self.dict[w].append(v)
-          
-    def setTime(self,v,w,time):
-        self.dict[v][w].append(time)
+            self.distance[(v,w)] = time
+        
         
     def getTime(self,v,w):
-        return self.dict[v][w]
-      
+        return self.distance[(v,w)]
+    '''
+    likely will add this to the add_edge class then adjust it in the future for the getLine function 
     def addLine(self,v,w,tupxY): #used to store the curve of the line 
-        self.dict[v][w].append(tupxY)
+        self.dict[v][(v,w)].append(tupxY)
         #self.dict[w][v].append(tupxY)
         
     def getLine(self,v,w):
-        return self.dict[v][w]
-    
+        return self.dict[v][(v,w)][1]
+        work off tackc code more
+    '''
     def del_edge(self, v, w):
-        pass
-        #self.dict[v][w] = None
-        #self.[w][v] = None
+        self.dict[v][w] = None
+        self.dict[w][v] = None
+        if v < w:
+            
+            self.distance[(v,w)] = None
+        else:
+            self.distance[(w,v)] = None
+        
         
     def __str__(self):
         vert = 'vertices: '
