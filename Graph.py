@@ -51,7 +51,13 @@ class Graph(object):
             self.dict[w].append(v)
             self.distance[(v,w)] = time
         
-        
+    def getNeighbor(self,v):
+        if v not in self.dict:
+            return None
+        else:
+            return self.dict[v]
+    
+    
     def getTime(self,v,w):
         return self.distance[(v,w)]
     '''
