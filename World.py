@@ -1,9 +1,12 @@
 from  Classes.AbstractWorld import AbstractWorld
+from Classes.Graph import Graph
 
 import pygame
 pygame.font.init() 
 
 class World(AbstractWorld):
+	
+	graphViz = Graph()
 	
 	def __init__(self):
 		AbstractWorld.__init__(self)
@@ -19,9 +22,11 @@ class World(AbstractWorld):
 		self.x_graphic = []
 		self.y_graphic = []
 		self.vID = []
-		self.graphLocDict = {}
-		
+		self.vtxPosit = {}
+		self.neighborRelDict ={} #dictionary for the direct neighbor key for vertex
+		self.neighborPositDict = {} 
 		self.rectList = []
+		self.neighborPosit = []
 
 
 	def runSimulation(self, fps=1, initialTime=5*60, finalTime=23*60):
@@ -66,30 +71,45 @@ class World(AbstractWorld):
   	'''WMW'''
 	def changeToViz(self,verts): #takes x and y in vertices and imports as vert to be graphed
 			
-		for i in range(0,len(verts)-1):
+		for i in verts:
 			self.vID.append(i)
-			print self.vID
-		for i in range(0,len(verts)-1):
-			self.x_graphic.append(verts[i][1]*self.width)
+		print self.vID
+		for i in range(len(self.vID)):
+			self.vID[i][1] = int(self.vID[i][1]*self.width)
 			
-		for i in range(0,len(verts)-1):
-		   self.y_graphic.append(verts[i][2]*self.height)
-				
-		for i in range(0,len(verts)-1):
-			self.graphLocDict[self.vID[i]] = (self.x_graphic[i],self.y_graphic[i])
+		for i in range(len(self.vID)):
+			self.vID[i][2] = int(self.vID[i][2]*self.width)
 			
+		for i in self.vID:
+			self.vtxPosit[i[0]] = (i[1],i[2])
 			
-	def appearances(self): #put vertices on display
-		iter = 0
-		for i in range(len(self.graphLocDict)): 
-			rectCreate = pygame.draw.rect(self.screen, self.blue,(0,0,2,2))
-			rectCreate = self.graphLocDict[i]			
-			self.rectList.append(rectCreate)
-			print i, self.graphLocDict[i]
+		
 
-		for i in range(len(self.graphLocDict)): 
-			self.screen.blit(self.screen, self.rectList[i])
+	def appearances(self): #put vertices on display
+		for vertex in self.vtxPosit: #every vertex
+			pygame.draw.rect(self.screen, self.blue,(self.vtxPosit[vertex][0]-2,self.vtxPosit[vertex][1]-2,4,4))	
+		for edge in self.neighborPosit:
+			pygame.draw.aaline(self.screen,self.blue,edge[0],edge[1],4)
 			
-		pygame.display.update()	
-		pygame.time.delay(500000)
+		pygame.display.update()
+		pygame.time.delay(5000)
+		#get neighbors of vertices and draw a line
+			
+		
+	
+		
+	def drawGraph(self,node,node_neighbors):
+			
+		if node_neighbors != None:		
+			vertPoint = self.vtxPosit[node]
+	
+			for i in node_neighbors:
+				#print(node, "->", i)
+				#print("######")
+				vertNeighbor = self.vtxPosit[i] #[node_neighbors[i]
+				self.neighborPosit.append((vertPoint, vertNeighbor)) #might need to be fixed for later updates, this just lists all edge points for visualization
+				#self.lineList.append(lineCreate)
+
+
+		
 		
