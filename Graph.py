@@ -1,6 +1,11 @@
 '''
-Created on Mar 6, 2020
+Created on Mar 19, 2020
 
+@author: Wade
+'''
+
+'''
+Created on Mar 6, 2020
 @author: Thoma
 '''
 
@@ -44,8 +49,6 @@ class Graph(object):
             self.dict[v] = []
         if w not in self.dict:
             self.dict[w] = []   
-        if v > w:
-            v, w = w, v
         if (v,w) not in self.distance:
             self.dict[v].append(w)
             self.dict[w].append(v)
@@ -57,7 +60,12 @@ class Graph(object):
         else:
             return self.dict[v]
     
-    
+    def getNeighborSize(self,v):
+        if v not in self.dict:
+            return None
+        else:
+            return len(self.dict[v])
+
     def getTime(self,v,w):
         return self.distance[(v,w)]
     '''
@@ -91,4 +99,3 @@ class Graph(object):
 
     #world give the truck locations
     
-
