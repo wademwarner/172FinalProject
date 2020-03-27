@@ -8,16 +8,13 @@ from networkx.classes import graph
 
 graphObj = Graph()
 
-myWorld = World()
+myWorld = World(graphObj)
 
 
 
 '''
-
 for i in range(len(myWorld.Edges)):
-
     graphObj.add_node(myWorld.Edges[i][0]) #add vertices
-
 '''
 
 
@@ -28,15 +25,16 @@ for j in range(len(myWorld.Edges)):
     #need to change the graphing method so that if there is a list of size 2 then stright line
     #else, if list is not 2 then keep iterating a new stright line to represent curvature
 
-print(myWorld.Edges)
+#print(myWorld.Edges)
+
 
 print('work?')
-print(graphObj.getLine(136, 141))
+print(graphObj.getLine(7, 149))
 print(graphObj.isLinStraight(136, 141))
+
+
 vtx = myWorld.Verticies
-
-
-
+      
 myWorld.changeToViz(vtx)
 
 
@@ -54,7 +52,3 @@ myWorld.appearances()
 
 
 myWorld.runSimulation(10)
-
-
-
-
