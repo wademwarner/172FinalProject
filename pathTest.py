@@ -5,6 +5,7 @@ Created on Mar 26, 2020
 '''
 from Graph import Graph
 import numpy as np 
+from email.charset import SHORTEST
 
 g = Graph()
 arr = np.arange(3)
@@ -39,6 +40,7 @@ n = len(g.getAllNeighbors())
 
 startNode = 'A'
 
+endNode = 'H'
 path = {}
 
 bucket = [ [] for j in range(C*n + 1)]
@@ -76,12 +78,30 @@ while len(permanentNode) < n:
             if newDist < path[u]:
                 bucket[ path[u] ].remove(u)
                 path[u] = newDist
-                before[u] = newDist
+                before[u] = smallestNode
                 bucket[ path[u] ].append(u)
                 
                 
 print(path)
 
-print(before)
+print(before)   #want to return path and before, path
+
+#find the shortest path 
+
+done = True
+shortestPath = {}
+shortestPath[endNode] = [before[endNode],path[endNode]]
+endNode = before[endNode]
+while done:
+    if path[endNode] == 0:
+        done = False
+        shortestPath[endNode] = [endNode,0]
+    else:
+        shortestPath[endNode] = [before[endNode],path[endNode]]
+        endNode = before[endNode]
+    
+ 
+print(shortestPath)
+
   
 
