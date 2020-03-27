@@ -19,7 +19,7 @@ Created on Mar 6, 2020
 '''
 
 
-import numpy
+import numpy as np 
 
 
 
@@ -289,15 +289,17 @@ class Graph(object):
 
         return vert
 
-    def find_path(self):
-        smallestNode = 'A'
+    def find_path(self, start, end):
+        
+        g = self
+        smallestNode = start
 
         C = np.max([i for i in g.getAllTime()])
         n = len(g.getAllNeighbors())
         
-        startNode = 'A'
+        startNode = start
         
-        endNode = 'H'
+        endNode = end
         path = {}
         
         bucket = [ [] for j in range(C*n + 1)]
@@ -358,7 +360,7 @@ class Graph(object):
                 endNode = before[endNode]
             
          
-        print(shortestPath)
+        return shortestPath 
 
 
 
