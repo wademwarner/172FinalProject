@@ -107,10 +107,10 @@ class Graph(object):
 
             self.dict[v].append(w)
 
-            #self.dict[w].append(v)         Removed to make this to make the path test element easier 
+            self.dict[w].append(v)         #Removed to make this to make the path test element easier 
 
             self.distance[(v,w)] = time
-
+            self.distance[(w,v)] = time
 
     def getAllNeighbors(self):
         return self.dict.keys()    
