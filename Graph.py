@@ -93,7 +93,7 @@ class Graph(object):
 
     def add_edge(self, v, w, time, lineCurve):  #use v as the from node and w as the to node then add the time between them as well
 
-        time = 1 #used only for the first part of the project
+        #time = 1 #used only for the first part of the project
 
         if v not in self.dict:
 
@@ -107,19 +107,21 @@ class Graph(object):
 
             self.dict[v].append(w)
 
-            self.dict[w].append(v)
+            #self.dict[w].append(v)         Removed to make this to make the path test element easier 
 
             self.distance[(v,w)] = time
             
         if (v,w) not in self.line:
             
-            #[l.tolist() for l in list1]
+           
             
             self.line[(v,w)] = [lin.tolist() for lin in lineCurve]
             
             
 
-        
+    def getAllNeighbors(self):
+        return self.dict.keys()    
+    
 
     def getNeighbor(self,v):
 
@@ -153,8 +155,13 @@ class Graph(object):
             return False
 
     def getTime(self,v,w):
-
-        return self.distance[(v,w)][0]
+        if (v,w) in self.distance.keys():
+            return self.distance[(v,w)]
+        else:
+            return None
+    
+    def getAllTime(self):
+        return self.distance.values()
 
     '''
 
