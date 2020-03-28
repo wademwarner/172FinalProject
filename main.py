@@ -27,11 +27,8 @@ myWorld = World(graphObj)
 
 
 '''
-
 for i in range(len(myWorld.Edges)):
-
     graphObj.add_node(myWorld.Edges[i][0]) #add vertices
-
 '''
 
 
@@ -58,13 +55,13 @@ for j in range(len(myWorld.Edges)):
 
 
 
-print('work?')
+#print('work?')
 
-print(graphObj.getLine(7, 149))
+#print(graphObj.getLine(7, 149))
 
 #print(graphObj.isLinStraight(136, 141))
 
-print(graphObj.find_path(3,35))
+print(graphObj.find_path(3,8))
 
 
 
@@ -73,11 +70,6 @@ vtx = myWorld.Verticies
       
 
 myWorld.changeToViz(vtx)
-
-
-
-
-
 
 
 for k in range(len(myWorld.Edges)):
@@ -96,16 +88,7 @@ for k in range(len(myWorld.Edges)):
 
 
 
-myWorld.appearances()
-
-
-
-
-
+#myWorld.appearances()
 
 
 myWorld.runSimulation(10)
-
-
-
-
