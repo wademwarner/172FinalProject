@@ -5,7 +5,6 @@ Created on Mar 26, 2020
 '''
 from Graph import Graph
 import numpy as np 
-from email.charset import SHORTEST
 
 g = Graph()
 arr = np.arange(3)
@@ -40,7 +39,7 @@ n = len(g.getAllNeighbors())
 
 startNode = 'A'
 
-endNode = 'H'
+endNode = 'F'
 path = {}
 
 bucket = [ [] for j in range(C*n + 1)]
@@ -87,21 +86,47 @@ print(path)
 print(before)   #want to return path and before, path
 
 #find the shortest path 
-
+start = 'A'
 done = True
 shortestPath = {}
-shortestPath[endNode] = [before[endNode],path[endNode]]
+shortestPath[before[endNode]] = [endNode,path[endNode]]
 endNode = before[endNode]
 while done:
-    if path[endNode] == 0:
+    shortestPath[before[endNode]] = [endNode,path[endNode]]
+    if before[endNode] == start:
         done = False
-        shortestPath[endNode] = [endNode,0]
     else:
-        shortestPath[endNode] = [before[endNode],path[endNode]]
         endNode = before[endNode]
     
+
  
 print(shortestPath)
+
+
+print('iterate through the path a bit')
+
+path = shortestPath
+index = 'A'
+start = 'A'
+end = 'F'
+for i in range(0,4):
+
+    if start == index:
+        print('start')
+        print(path[start][0])
+        print(path[start][1])
+        index = path[start][0]
+    else:
+        
+        if index == end:
+            print('final path was found!! we done boy!')
+         
+        else:
+            print('next node is this and its this far away')
+            print(path[index][0])
+            print(path[index][1])
+            index = path[index][0]
+            
 
   
 
