@@ -74,18 +74,22 @@ class World(AbstractWorld,AbstractVehicle, Graph):
 
 		self.graphViz = x
 		
-		self.orders = {}  	#a dictionary to store the orders with elements as (start node,end node,index node)
+		self.orders = {}  	#a dictionary to store the orders with elements as (current node,end node,(x,y) position)
 		
 		self.orderPath = {}  #the shortest path a truck should follow to complete a specific order
+		
+		self.moveOrder = {} #a dictionary used to help the movement of orders
+		
+		self.orderStep = {} #track the steps of moving over a line as stepLenght, steps left
 	
 		#truck = pygame.image.load('C:\Users\Thoma\Desktop\truck.jpg')
 		truck = pygame.image.load('C:\Users\Thoma\Desktop\smallTruck.jpg') #upload an image of a truck
 		self.truck = pygame.transform.scale(truck,(20,20))		#Scale the image
-		
+	
 		
 		
 
-	def runSimulation(self, fps=1, initialTime=5*60, finalTime=23*60):
+	def runSimulation(self, fps=10, initialTime=5*60, finalTime=23*60): #fps was 1 before
 
 		'''
 		This will give you a list of ALL cars which are in the system
@@ -105,9 +109,13 @@ class World(AbstractWorld,AbstractVehicle, Graph):
 			for c in newOrders:                   #use c to animate the moving of the trucks based on the animation procedure 
 				print c
 				
-				self.orders[c] = list(self.getRandVerts())									#create a new order
-				self.orders[c].append(self.orders[c][0])                                        #the start of the node is the initial index
-				self.orderPath[c] = self.graphViz.find_path(self.orders[c][0],self.orders[c][1])#get the shortest path and store it
+				self.orders[c] = list(self.getRandVerts())									#create a new order with its starting position as random
+				self.orders[c].append([float(self.vtxPosit[self.orders[c][0]][0]),float(self.vtxPosit[self.orders[c][0]][1])])  #sets the x,y coordinate of the 
+				self.moveOrder[c] = [self.vtxPosit[self.orders[c][0]][0],self.vtxPosit[self.orders[c][0]][1],self.vtxPosit[self.orders[c][1]][0],
+									self.vtxPosit[self.orders[c][1]][1]] #add in the x1,y1,x2,y2 poisiton 
+				ty = float(self.graphViz.getTime(self.orders[c][0],self.graphViz.getNextNode(self.orders[c][0],self.orders[c][1])))
+				self.orderStep[c] = [ty,ty]
+				#self.orderPath[c] = self.graphViz.find_path(self.orders[c][0],self.orders[c][1])#get the shortest path and store it
 				
 				
 				
@@ -121,7 +129,8 @@ class World(AbstractWorld,AbstractVehicle, Graph):
 			self.appearances()              #used so that the vertices are shown on the screen
 			
 			for i in self.orders.keys():													#a For loop to animate each truck moving
-				self.moveTruck(i,self.orders[i][2],self.orders[i][1],self.orderPath[i])	#Animate the movement of each truck
+				self.moveTruck(i,self.orders[i][0],self.orders[i][1])#,self.orderPath[i]) add path back in	#Animate the movement of each truck
+				print('I ran once!')
 	
      
 			pygame.display.update()	
@@ -129,25 +138,61 @@ class World(AbstractWorld,AbstractVehicle, Graph):
 				pass   
 			self.clock.tick(fps)
 
-		#code by thomas  and from takac is above is above
 
 
 
-	def moveTruck(self,orderNum,indexNode,end,path):  #problems here likely means problems in the graph class path finding algorithm
+	def moveTruck(self,orderNum,indexNode,end):  #problems here likely means problems in the graph class path finding algorithm
+		
+		nextNode = self.graphViz.getNextNode(indexNode,end)
+		
 		if indexNode == end:
-			self.screen.blit(self.truck,(self.vtxPosit[indexNode][0]-2,self.vtxPosit[indexNode][1]-2))
+			self.screen.blit(self.truck,(self.orders[orderNum][2][0],self.orders[orderNum][2][1]))
 			#pygame.draw.rect(self.screen, self.green,(self.vtxPosit[indexNode][0]-2,self.vtxPosit[indexNode][1]-2,12,12))    #using  rectangle instead of truck image
 			del self.orders[orderNum] 
-			del self.orderPath[orderNum] 
+			del self.moveOrder[orderNum]
+			del self.orderStep[orderNum]
+			#del self.orderPath[orderNum] 
 
-		else:
-			#print('start')     #use to troubleshoot
-	        #print(path[start][0])
-	        #print(path[start][1])
-			#pygame.draw.rect(self.screen, self.green,(self.vtxPosit[indexNode][0]-2,self.vtxPosit[indexNode][1]-2,12,12))   #using a rectangle instead of truck image
-			self.screen.blit(self.truck,(self.vtxPosit[indexNode][0]-2,self.vtxPosit[indexNode][1]-2))
-			indexNode = path[indexNode][0]
-			self.orders[orderNum][2] = indexNode
+		
+		
+		else: #moving on the path incramentally 
+			print(orderNum)
+			print(self.orders[orderNum][2])
+			print(self.moveOrder[orderNum][0])
+			print(self.moveOrder[orderNum][1])
+			print(self.moveOrder[orderNum][2])
+			print(self.moveOrder[orderNum][3])
+			print('the step is')
+			print(self.orderStep[orderNum][0])
+			print('the number of stes left is')
+			print(self.orderStep[orderNum][1])
+			
+			
+		 
+			x1 = float(self.moveOrder[orderNum][0] )
+			y1 = float(self.moveOrder[orderNum][1])
+			x2=  float(self.moveOrder[orderNum][2]) 
+			y2 = float(self.moveOrder[orderNum][3])
+			print('movement of x is')
+			print(float((1/self.orderStep[orderNum][0])*(x2 -x1)))
+			print('movement of y is')
+			print(float((1/self.orderStep[orderNum][0])*(y2 -y1)))
+			self.orders[orderNum][2][0] += float((1/self.orderStep[orderNum][0])*(x2 -x1))
+			self.orders[orderNum][2][1] += float((1/self.orderStep[orderNum][0])*(y2 -y1))
+			self.orderStep[orderNum][1] -= float(1) #adjust the steps of the order
+			
+			self.screen.blit(self.truck,(self.orders[orderNum][2][0],self.orders[orderNum][2][1]))
+			
+			if self.orderStep[orderNum][1] == 0:
+				print('new thing to go over')
+				self.moveOrder[orderNum][0] = self.orders[orderNum][2][0]
+				self.moveOrder[orderNum][1] = self.orders[orderNum][2][1]
+				self.moveOrder[orderNum][2] = self.vtxPosit[self.graphViz.getNextNode(nextNode,end)][0]
+				self.moveOrder[orderNum][3] = self.vtxPosit[self.graphViz.getNextNode(nextNode,end)][1]
+				self.orderStep[orderNum][0] = float(self.graphViz.getTime(nextNode,self.graphViz.getNextNode(nextNode,end)))
+				self.orderStep[orderNum][1] = self.orderStep[orderNum][0]
+				
+	
 	        
 
 		
@@ -156,9 +201,6 @@ class World(AbstractWorld,AbstractVehicle, Graph):
 
 	def changeToViz(self,verts): #takes x and y in vertices and imports as vert to be graphed
 		
-		'''
-		SEE IF THIS CAN BE CHANGES SO THAT IT TAKES UP THE ENTIRE SCREEN, MAYBE ADJUST THE HEIGHT
-		'''
 		
 		for i in verts:
 

@@ -38,6 +38,10 @@ class Graph(object):
         self.edge = {} #store the tiem it take to travel on each edge 
         
         self.line = {} #store the curvature of each line
+        
+        self.nextMatrix = {}  #store the shortest distance between points
+        
+        self.floydMatrix = {} #store the shortest ditance between points
 
 
     def get_node_list(self): #return the vertices
@@ -258,6 +262,10 @@ class Graph(object):
 
         return vert
 
+
+    '''
+    keep i part 1 file for reference, else delete this john
+    '''
     def find_path(self, start, end):   #a path finding algorithm                       
         '''
         LIKELY CHANGE THIS SHIT UP TO MAKE IT A LOT MORE EFFICIENT 
@@ -342,5 +350,43 @@ class Graph(object):
          
         return shortestPath                         #An ordered shortest path is returned here 
 
+
+    def getFloydShortest(self,i,j): #returns the shortest ditance between two nodes
+        return self.floydMatrix[i,j]
+    
+    def getNextNode(self,i,j):  #returns the next node to be used in the world class for finding a path
+        return self.nextMatrix[i,j]
+    
+    def setFloyd(self): #a method to set run the floyd welch algorithm to find the shortesrt distance between points
+        n = len(self.getAllNeighbors())
+        self.floydMatrix = np.ones([n,n])*np.inf
+        
+        map = {}
+        
+        V = sorted(self.getAllNeighbors())
+        
+        for i,v in enumerate(V):
+            map[v] = i
+            
+        print(map) #delete this later after implemented
+        
+        self.nextMatrix = {}
+        
+        for i in V:
+            for j in V:
+                self.nextMatrix[i,j] = '?'
+        
+        for e in self.getAllNeighbors():
+            for t in self.getNeighbor(e):
+                self.floydMatrix [map[e],map[t]] = self.getTime(e, t)  #Adjustment to make this work for the graph class
+                self.nextMatrix[e,t] = t
+        
+        
+        for k in V:
+            for i in V:
+                for j in V:
+                    if self.floydMatrix [map[i],map[k]] + self.floydMatrix [map[k],map[j]] < self.floydMatrix [map[i],map[j]]:
+                        self.floydMatrix [map[i],map[j]] = self.floydMatrix [map[i],map[k]] + self.floydMatrix [map[k],map[j]]
+                        self.nextMatrix[i,j] = self.nextMatrix[i,k]
 
 

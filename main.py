@@ -19,7 +19,9 @@ for j in range(len(myWorld.Edges)):
     #if myWorld.Edges[j][2] > 2:
      #   print(myWorld.Edges[j][2])
       #  print(myWorld.Edges[j][3])
-
+#set the floyd welch matrix up
+graphObj.setFloyd()
+print('floyd Finish')
 
 #print(myWorld.Edges)
 
@@ -53,7 +55,7 @@ for k in range(len(myWorld.Edges)):
 #myWorld.appearances()
 
 
-myWorld.runSimulation(10) 
+myWorld.runSimulation(1) 
 
 
 
