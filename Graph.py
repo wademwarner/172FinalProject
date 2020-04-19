@@ -124,21 +124,17 @@ class Graph(object):
             
             if (w,v) not in self.line.keys():           #assigns the curvature of the line to an edge
                 self.line[(w,v)] = np.flip(lineCurve,0)
-            
-            
-        '''
-        For part two 
-        the if statement above needs to be changed to accomidate different road paths, this will dictate the  self.distance[(v,w)] = time as is above or just one or the other
-        Also change for the lineCurve part
-        '''
 
-    def getAllNeighbors(self):    #returns all the neihbors for all the nodes
+
+    def getAllNeighbors(self):    #returns all the neighbors for all the nodes
         return self.dict.keys()    
- 
 
     
     def getAllTime(self):
-        return self.distance.values() #returns all the times of the edges
+        dist = []
+        for i in self.distance.keys():
+            dist.append(self.distance[i])
+        return dist #returns all the times of the edges
 
     
     def getNeighbor(self,v): #reuturns the neighbors of node v and returns None if a node doesnt exisit
@@ -165,32 +161,25 @@ class Graph(object):
     def getLine(self,v,w):
         
         if (v,w) not in self.line.keys():    #return None is an edge doesnt exisit
-            return 6
+            return None
         
         else:
             return self.line[(v,w)]        #return the curvature of an edge
 
-        '''
-        try:
 
-            return self.line[(v,w)]
 
-        except KeyError:
+    def isLineStraight(self,v,w):  #asking if the line is straight
 
-            return 152
-            code wade did that i am not sure if it is right 
-        '''
-    
-
-    def isLinStraight(self,v,w):  #asking if the line is straight
-
-        if len(self.line[(v,w)]) == 2:
-
-            return True                    #return True if the line is straight
-
+        return len(self.line[(v,w)]) == 2
+                  #return False if the line is curved, True if line isnt curved
+                  
+    def getLineLength(self,v,w):
+        if (v,w) not in self.line.keys():    #return None is an edge doesnt exisit
+            return None
+        
         else:
+            return len(self.line[(v,w)])      #return the curvature of an edge
 
-            return False                   #return False if the line is curved
 
 
 
@@ -203,25 +192,6 @@ class Graph(object):
 
 
 
-    '''
-
-    likely will add this to the add_edge class then adjust it in the future for the getLine function 
-
-    def addLine(self,v,w,tupxY): #used to store the curve of the line 
-
-        self.dict[v][(v,w)].append(tupxY)
-
-        #self.dict[w][v].append(tupxY)
-
-        
-
-    def getLine(self,v,w):
-
-        return self.dict[v][(v,w)][1]
-
-        work off tackc code more
-
-    '''
 
 
 
@@ -263,92 +233,7 @@ class Graph(object):
         return vert
 
 
-    '''
-    keep i part 1 file for reference, else delete this john
-    '''
-    def find_path(self, start, end):   #a path finding algorithm                       
-        '''
-        LIKELY CHANGE THIS SHIT UP TO MAKE IT A LOT MORE EFFICIENT 
-        ALSO COMMENT OUT AFTER THE CHANGES ARE MADE TO IT. NEED TO FINISH PART 1 BEFORE THIS CAN HAPPEN
-        TRY TO GET THIS TO BE LESS THAN 30 LINES OF CODE TOTAL
-        '''
-        print(start)
-        print(end)
-        #g = self   replace self with g if explosion occurs
-        smallestNode = start
-
-        C = np.max([i for i in self.getAllTime()])
-        n = len(self.getAllNeighbors())
-        
-        
-        path = {}
-        
-        bucket = [ [] for j in range(C*n + 1)]
-        
-        for t in self.getAllNeighbors():
-            if t == start:
-                path[t] = 0
-            else:
-                path[t] = n*C 
-                
-            bucket[ path[t] ].append(t)
-
-        permanentNode = {}
-        
-        before = {}
-        
-        bucketIndex = 0
-        while len(permanentNode) < n:
-            
-            if len(bucket[bucketIndex]) > 0:
-                smallestNode = bucket[bucketIndex].pop()
-                
-            else:
-                bucketIndex += 1
-                continue
-            
-            permanentNode[smallestNode] = True
-            
-            for u in self.getNeighbor(smallestNode):                               #a for loop to find the shortest path and retirh in as path
-                
-                if u not in permanentNode:
-                    newDist = path[smallestNode] + self.getTime(smallestNode, u)
-                    
-                    if newDist < path[u]:
-                        bucket[ path[u] ].remove(u)
-                        path[u] = newDist
-                        before[u] = smallestNode
-                        bucket[ path[u] ].append(u)
-                        
-                        
-        #print(path)     #MAY not need to print this
-        
-        #print(before)   #want to return path and before, path    Also do we need to print????
-        
-        #find the shortest path 
-        '''
-        This returning a dictonary of wehre the key is the first Node and all other nodes other than the end node
-        then the next node it suppose to go to along with the cummulative distance
-        '''
-        
-        done = True
-        shortestPath = {}
-        shortestPath[before[end]] = [end,path[end]]
-        if start == before[end]:
-            pass
-        else:
-            end = before[end] 
-            while done:
-            
-                before[end]
-                shortestPath[before[end]] = [end,path[end]]
-                if before[end] == start:
-                    done = False
-                else:
-                    end = before[end]
-                
-         
-        return shortestPath                         #An ordered shortest path is returned here 
+                       #An ordered shortest path is returned here 
 
 
     def getFloydShortest(self,i,j): #returns the shortest ditance between two nodes

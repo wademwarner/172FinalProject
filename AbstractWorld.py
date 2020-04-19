@@ -29,7 +29,7 @@ class AbstractWorld:
 		np.random.shuffle(self.v)
 	
 		for i, v in enumerate(self.v):
-			if i%3 == 0:
+			if i%300 == 0:
 				newVehicle = Vehicle(i,v) #i is the truck number from 0-62, v is the actual truck number
 				newVehicle.type="Truck"
 				newVehicle.capacity = np.random.randint(3,30)
@@ -41,7 +41,7 @@ class AbstractWorld:
 		np.random.seed(t)
 		if t > 22*60:
 			return newOrders
-		if np.random.rand() < 0.3:
+		if np.random.rand() < 0.1:
 			n = np.random.randint(1,3)
 			np.random.shuffle(self.v)
 			for j in xrange(n):
