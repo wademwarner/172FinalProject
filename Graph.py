@@ -1,23 +1,8 @@
 '''
-
-Created on Mar 19, 2020
-
-
-
-@author: Wade
-
-'''
-
-
-
-'''
-
-Created on Mar 6, 2020
+Created on Apr 22, 2020
 
 @author: Thoma
-
 '''
-
 
 import numpy as np 
 
@@ -273,5 +258,54 @@ class Graph(object):
                     if self.floydMatrix [map[i],map[k]] + self.floydMatrix [map[k],map[j]] < self.floydMatrix [map[i],map[j]]:
                         self.floydMatrix [map[i],map[j]] = self.floydMatrix [map[i],map[k]] + self.floydMatrix [map[k],map[j]]
                         self.nextMatrix[i,j] = self.nextMatrix[i,k]
+                        
+    def find_pathLength(self, start, end):                        
 
+        #g = self   replace self with g if explosion occurs
+        smallestNode = start
 
+        C = np.max([i for i in self.getAllTime()])
+        n = len(self.getAllNeighbors())
+        
+        
+        path = {}
+        
+        bucket = [ [] for j in range(C*n + 1)]
+        
+        for t in self.getAllNeighbors():
+            if t == start:
+                path[t] = 0
+            else:
+                path[t] = n*C 
+                
+            bucket[ path[t] ].append(t)
+
+        permanentNode = {}
+        
+        before = {}
+        
+        bucketIndex = 0
+        while len(permanentNode) < n:
+            
+            if len(bucket[bucketIndex]) > 0:
+                smallestNode = bucket[bucketIndex].pop()
+                
+            else:
+                bucketIndex += 1
+                continue
+            
+            permanentNode[smallestNode] = True
+            
+            for u in self.getNeighbor(smallestNode):                               #a for loop to find the shortest path and retirh in as path
+                
+                if u not in permanentNode:
+                    newDist = path[smallestNode] + self.getTime(smallestNode, u)
+                    
+                    if newDist < path[u]:
+                        bucket[ path[u] ].remove(u)
+                        path[u] = newDist
+                        before[u] = smallestNode
+                        bucket[ path[u] ].append(u)
+                        
+                        
+        return path[end]

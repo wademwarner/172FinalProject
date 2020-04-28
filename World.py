@@ -82,45 +82,59 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		truck = pygame.image.load('C:\Users\Thoma\Desktop\smallTruck.jpg') #upload an image of a truck
 		self.truck = pygame.transform.scale(truck,(20,20))		#Scale the image
 		
-		self.Warehouses = {}
 		
-		self.ProductionLines = {}
 		
-		self.facility = Facilities()
+		self.facilObj = Facilities()
 		
 		self.orderInfo = {}   #'Current Position', 'End Position','Truck Used', 'Finished' old stuff here
 		
 		self.order_sequence = {}
 		
+		self.ProdSet = True
 		
+		self.ProductionInfo = {}
 		
 		self.truckObj = {} #dictionary to hold all the truck objects 
+		
+		
 	def runSimulation(self, fps=1, initialTime=5*60, finalTime=23*60):
 
 
-
 		Warehouses = self.getLocationOfWarehouses()
-		print (Warehouses)
-		#print('how warehouses are in facilities ')
-		self.Warehouses = self.facility.defineWarehouses(Warehouses)
+		self.facilObj.defineWarehouses(Warehouses)
 		
 		'''
 		print(self.Warehouses)
 		This is how the warehouses are stored in self.Warehouses
 		{'A': [37, 0], 'C': [5, 91], 'B': [208, 98], 'E': [140, 200], 'D': [20, 33], 'G': [68, 16], 'F': [165, 147], 'H': [111, 172]}
+		
 		'''
+		
+		
 
 		ProductionLines = self.getProductionLines()
-		self.defineLines
-		print (ProductionLines)
+		print(ProductionLines)
 		
-		self.ProductionLines = self.facility.defineLines(ProductionLines)
+		self.facilObj.defineLines(ProductionLines)
 		
 		'''
 		print(self.ProductionLines) -Currently we are not looking at capacity for these, only bring what is needed for each step
 		{'L4': [89, 84, 168, 153, 26], 'L2': [82, 10, 174, 186, 185], 'L3': [1, 15, 3, 13, 32], 'L1': [119, 141, 181, 46, 25]}
-		
+		Bellow is a nested for loop to add the capacity and usage condition to all the production site with their node as the key 
+		This is needed for determining if an order can be procesed and if material is needed for that specific order also 
 		'''
+		
+		
+		if self.ProdSet:
+			self.ProdSet = False
+			for i in self.facilObj.lines.keys():
+				for j in range(len(self.facilObj.lines[i])):
+					self.ProductionInfo[self.facilObj.lines[i][j]] = {'Capacity Max':100, 'Capacity Held':0, 'In Use': False}
+					
+			print(self.ProductionInfo)
+		
+		
+		
 		
 
 		'''
@@ -145,7 +159,13 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 				print c
 				print c.productionProcess
 				print c.finalLocation
+				self.createOrderDict(c,c.productionProcess,c.finalLocation)
+				'''
+				need to call a method here to create an order dict 
 				
+				{'processingTime': 7, 'processinLine': 'L2', 'materialNeeded[tons]': 7, 'resourceNeeded': 'D'}, {'processingTime': 6, 'processinLine': 'L1', 'materialNeeded[tons]': 9, 'resourceNeeded': 'B'}
+				
+				'''
 				#create a new order with its starting and end position as random
 				#liss = list(self.getRandVerts())
 			
@@ -165,8 +185,19 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 			self.screen.fill((255, 255, 255))
 			self.screen.blit(text, textrect)
 			self.appearances()              #used so that the vertices are shown on the screen
+			'''	
+			for i in self.orderInfo.keys(): #maybe make everything in this for loop into a method 
 				
-			for i in self.orderInfo.keys(): #maybe make evrything in this for loop into a method 
+				
+			
+				for the step 2 we need a method for moving the materials to the production line
+				need one to move the truck which is already there 
+				
+				
+				if material is in transit no order produciton is going on at that porduction site but the truck needs to transport and it 
+						NEED SOMETHING IN THE ORDER DICTIONARY FOR THE 
+			
+				
 				
 				if self.orderInfo[i]['Truck Used'] != None and self.orderInfo[i]['Finished'] == False:
 					
@@ -185,7 +216,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 									self.orderInfo[i]['End Position'])
 				else:
 					self.findTruckForOrder(i) #seeing if a truck has been freed up form last go around
-     
+     		'''
 			pygame.display.update()	
 			for event in pygame.event.get():
 				pass   
@@ -193,6 +224,88 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 
 
 
+
+	def createOrderDict(self,orderNum,orderProcess,endNode): #a method to create two dictionaries to be used for the order process 
+		
+		ordL = len(orderProcess)
+		print(ordL)
+		#create the order dictionary
+		for i in range(ordL):
+			
+			print(ordL-i-1)
+			print orderProcess[ordL-i-1]
+			print orderProcess[ordL-i-1]['processingTime']
+			print orderProcess[ordL-i-1]['materialNeeded[tons]']
+			print orderProcess[ordL-i-1]['resourceNeeded']
+			res = orderProcess[ordL-i-1]['resourceNeeded']
+			mat = orderProcess[ordL-i-1]['materialNeeded[tons]']
+			time = orderProcess[ordL-i-1]['processingTime']
+		
+			self.order_sequence[orderNum] = {(ordL-i):{'Process Time': orderProcess[ordL-i-1]['processingTime'],
+											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
+											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
+											'Production Line': 0}}
+			'''
+			self.order_sequence[orderNum][ordL - i] = {'Process Time': orderProcess[ordL-i-1]['processingTime'],
+											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
+											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
+											'Production Line': 0}
+			'''
+
+			if (ordL-i)!= ordL:
+				self.order_sequence[orderNum][ordL-i]['Production Line'] = self.findOrderPath(orderNum, 
+																							orderProcess[ordL-i-1]['processinLine'], 
+																							self.order_sequence[orderNum][ordL-i]['Production Line'])
+			else:
+				self.order_sequence[orderNum][ordL - i]['Production Line'] = self.findOrderPath(orderNum, 
+																							orderProcess[ordL-i-1]['processinLine'], 
+																							endNode)
+		
+		
+		self.orderInfo[orderNum] = {'Current Node':self.order_sequence[orderNum][1]['Production Line'],
+								'End Node':endNode, #maybe change this to the 2nd step location
+								'Truck Used':None, 
+								'Delivery Location':'No idea what I meant by this??', #take out if nothing is added later in this spot
+								'Finished':False,
+								'Order Step':1, 
+								'Order TIS':0}
+		
+		print('the order sequence is')
+		print self.order_sequence[orderNum]
+		print('the order info is ')
+		print self.orderInfo[orderNum]
+		
+	'''
+	Need to figure out the exact nodes of produciton facilities the order will go to from the findOrderPath method
+	Then add everything into a dicitonary with all that 
+	Store each step as a different sub key of the dictionary, step1, step2,...., stepN
+	{'processingTime': 7, 'processinLine': 'location of the node of this produciton line', 'materialNeeded[tons]': 7, 'resourceNeeded': 'D'}
+	'''
+	#self.order_sequence = {'Process Time':,'Production Line':,'Material and Resource':,}
+	#self.orderInfo = {'Current Node':,'End Node':,'Truck Used':, 'Delivery Location'L, 'Finished:False,'Order Step':, 'Order TIS':0}
+
+
+	
+	
+	def findOrderPath(self,orderNumber, ProdSite, endNode): #a dictionary to find the shortest optimal production locations based on the final location 
+		#This method takes in the following, order Number, Name of the type of production site and  
+		#the node of the production site or end location order goes to next 
+		#The for loop is finding the shortest distance between two nodes and comparing them to find the shortest path for the order to work
+		#Add hungarian method in here if possible 
+		smallestDist = 1000
+		distHold = 0
+		optimalLocation = 0
+		
+		for i in range(len(self.facilObj.lines[ProdSite])):
+			distHold = self.graphViz.find_pathLength(self.facilObj.lines[ProdSite][i],endNode) 
+			if distHold < smallestDist:
+				smallestDist = distHold
+				optimalLocation = self.facilObj.lines[ProdSite][i]
+				
+		return optimalLocation
+	
+	def findClosestWarehouse(self):
+		pass
 
 	def moveTruck(self,orderNumber,TruckNum,indexNode,end):  #problems here likely means problems in the graph class path finding algorithm
 
