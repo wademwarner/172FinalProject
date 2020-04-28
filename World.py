@@ -8,6 +8,7 @@ from Classes.AbstractVehicle import AbstractVehicle
 
 from Classes.Trucks import Trucks
 
+from Classes.Facilities import Facilities 
 
 import pygame
 
@@ -25,7 +26,7 @@ pygame.font.init()
 
 
 
-class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
+class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 
 	
 
@@ -81,25 +82,56 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 		truck = pygame.image.load('C:\Users\Thoma\Desktop\smallTruck.jpg') #upload an image of a truck
 		self.truck = pygame.transform.scale(truck,(20,20))		#Scale the image
 		
+		self.Warehouses = {}
+		
+		self.ProductionLines = {}
+		
+		self.facility = Facilities()
+		
+		self.orderInfo = {}   #'Current Position', 'End Position','Truck Used', 'Finished' old stuff here
+		
+		self.order_sequence = {}
+		
+		
 		
 		self.truckObj = {} #dictionary to hold all the truck objects 
-		
-		
+	def runSimulation(self, fps=1, initialTime=5*60, finalTime=23*60):
 
-	def runSimulation(self, fps=10, initialTime=5*60, finalTime=23*60): #fps was 1 before
+
+
+		Warehouses = self.getLocationOfWarehouses()
+		print (Warehouses)
+		#print('how warehouses are in facilities ')
+		self.Warehouses = self.facility.defineWarehouses(Warehouses)
+		
+		'''
+		print(self.Warehouses)
+		This is how the warehouses are stored in self.Warehouses
+		{'A': [37, 0], 'C': [5, 91], 'B': [208, 98], 'E': [140, 200], 'D': [20, 33], 'G': [68, 16], 'F': [165, 147], 'H': [111, 172]}
+		'''
+
+		ProductionLines = self.getProductionLines()
+		self.defineLines
+		print (ProductionLines)
+		
+		self.ProductionLines = self.facility.defineLines(ProductionLines)
+		
+		'''
+		print(self.ProductionLines) -Currently we are not looking at capacity for these, only bring what is needed for each step
+		{'L4': [89, 84, 168, 153, 26], 'L2': [82, 10, 174, 186, 185], 'L3': [1, 15, 3, 13, 32], 'L1': [119, 141, 181, 46, 25]}
+		
+		'''
+		
 
 		'''
 		This will give you a list of ALL cars which are in the system
 		'''
-		aux = []
 		trucks = self.getInitialTruckLocations()
 		for i,t in enumerate(trucks):
-			print "vehicle %d: %s"%(i, str(t))
+			print "vehicle %d: %s"%(i, str(t)) 
 			
 			self.truckObj[i] = Trucks(i,t.currentPossition[1],t.capacity,self.vtxPosit[t.currentPossition[1]])
-			#{'Path':[currentNode,EndNode,location(x,y)],'Time':[TimeonPath,TimeLeftOnPath],'Order':[Truck ID,OrderNmber],'Use':[T/F if truck is in use,capacity]}
-
-
+ 
 
 		'''
 		We will run a simulation where "t" is the time index
@@ -111,13 +143,16 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 			print "New orders:"  
 			for c in newOrders:                   #use c to animate the moving of the trucks based on the animation procedure 
 				print c
+				print c.productionProcess
+				print c.finalLocation
 				
-				self.orders[c] = list(self.getRandVerts())									#create a new order with its starting position as random
-				#self.orders[c].append(0)
-				self.orders[c].append(-1)								#0=truck being used for the order FALSE is for fnished or not with order
-				self.findTruckForOrder(c)
-				self.orders[c].append(False)
-				#the order dictionary has (current node, end node, Truck Used, Finished/Not(a boolean T/F)
+				#create a new order with its starting and end position as random
+				#liss = list(self.getRandVerts())
+			
+				#self.orderInfo[c] = {'Current Position':liss[0], 'End Position':liss[1],'Truck Used':None, 'Finished':False}
+				#self.findTruckForOrder(c)
+
+				#print(self.orderInfo[c])
 	
 				
 				
@@ -130,18 +165,24 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 			self.screen.fill((255, 255, 255))
 			self.screen.blit(text, textrect)
 			self.appearances()              #used so that the vertices are shown on the screen
-			
-			for i in self.orders.keys():	
-				if self.orders[i][2] != -1: #if an order deosnt have a truck its truck number is -1, likely change this in part 2
-					if self.orders[i][0] == self.truckObj[self.orders[i][2]].getEndPosition():	
-
-						self.moveTruck(i,self.orders[i][2],self.truckObj[self.orders[i][2]].getPosition(),self.truckObj[self.orders[i][2]].getEndPosition())
-							#moveTruck(self,orderNumber,TruckNum,indexNode,end) so it has moveTruck(order NUmber,Truck Number, truck position, truck end position)
+				
+			for i in self.orderInfo.keys(): #maybe make evrything in this for loop into a method 
+				
+				if self.orderInfo[i]['Truck Used'] != None and self.orderInfo[i]['Finished'] == False:
+					
+					if self.orderInfo[i]['Current Position'] == self.truckObj[self.orderInfo[i]['Truck Used']].getEndPosition():
+						
+						#moving the truck when the it is on its way to the order!
+						
+						self.moveTruck(i,self.orderInfo[i]['Truck Used'],self.truckObj[self.orderInfo[i]['Truck Used']].getPosition(),
+									self.truckObj[self.orderInfo[i]['Truck Used']].getEndPosition())
+							
 												
 					else:
 						print('Truck going with order')
-						self.moveTruck(i,self.orders[i][2],self.truckObj[self.orders[i][2]].getPosition(),self.orders[i][1])	#Animate the movement of each truck
-						#moveTruck(self,orderNumber,TruckNum,indexNode,end) so it has moveTruck(order NUmber,Truck Number, truck position, order end position)
+							#Animate the movement of each truck
+						self.moveTruck(i,self.orderInfo[i]['Truck Used'],self.truckObj[self.orderInfo[i]['Truck Used']].getPosition(),
+									self.orderInfo[i]['End Position'])
 				else:
 					self.findTruckForOrder(i) #seeing if a truck has been freed up form last go around
      
@@ -155,10 +196,9 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 
 	def moveTruck(self,orderNumber,TruckNum,indexNode,end):  #problems here likely means problems in the graph class path finding algorithm
 
-		print(orderNumber)
+		
 		nextNode = self.graphViz.getNextNode(indexNode,end) #figure out the next node the truck is traveling to
-		print(self.graphViz.getLineLength(indexNode,nextNode)-1)
-		print(self.truckObj[TruckNum].getTimeOfAPath())
+	
 		stepSize = float((self.graphViz.getLineLength(indexNode,nextNode)-1)/self.truckObj[TruckNum].getTimeOfAPath())
 		#add in an ending condition here eventually 
 		'''
@@ -166,30 +206,23 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 		Then if the path is stright it executes the animation and if its curve then executes the animation
 		'''
 		if indexNode == end:
-			if self.orders[orderNumber][0] == self.orders[orderNumber][0]: #the truck reached the order end spot
+			
+			if self.orderInfo[orderNumber]['Current Position'] == self.orderInfo[orderNumber]['End Position']: 
+				#Deleting the order and freeing up the truck once the order has been fulfilled
 				print('we done with the animation now!!!!!!')
 				self.truckObj[TruckNum].setTruckUsage(False)
-				del self.orders[orderNumber]
-				#pygame.time.delay(10000) this adds a 10 seconds delay when the truck delivers the order to its end position
+				
+				#del self.orderInfo[orderNumber]
+				self.orderInfo[orderNumber]['Finished'] = True
+				self.orderInfo[orderNumber]['Truck Used'] = None
 				#part 2 add in something here add something in for the profit count update
 				
 				
 				
 				
 			else:#the truck reached the order position now it needs to go to the order end position
-				self.truckObj[self.orders[orderNumber][2]].setEndPosition(self.orders[orderNumber][1]) 
-				#sets a new end position of the truck to be the same as the orders end node
 				
-				
-				print('new truck position for the going to order')
-				
-				self.truckObj[TruckNum].setPosition_x_Coordinates(float(self.vtxPosit[indexNode][0]))
-				self.truckObj[TruckNum].setPosition_y_Coordinates(float(self.vtxPosit[indexNode][1]))
-				#set the new x and y coordinates of the truck
-
-				#add the new time for the next Edge and a new time on path of 1, 
-				self.truckObj[TruckNum].setTimeOfaNewPath(float(self.graphViz.getTime(self.truckObj[TruckNum].getPosition(),
-																	self.graphViz.getNextNode(self.truckObj[TruckNum].getPosition(),self.truckObj[TruckNum].getEndPosition()))))
+				self.moveTruckToOrderDest(orderNumber, indexNode, TruckNum)
 				
 			
 			
@@ -197,58 +230,32 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 		elif self.graphViz.isLineStraight(indexNode,nextNode): #animation for if the line is straight
 	
 			
-			
-			
-			x1 = float(self.vtxPosit[indexNode][0]) #the x position of a a line start
-			y1 = float(self.vtxPosit[indexNode][1]) #the y positin of aline start
-			x2=  float(self.vtxPosit[nextNode][0])  #the x position of a lines end
-			y2 = float(self.vtxPosit[nextNode][1]) #the y position of a lines end
-			
-			self.truckObj[TruckNum].setPosition_x_Coordinates(x1+float(self.truckObj[TruckNum].getTimeLeftOnPath()/self.truckObj[TruckNum].getTimeOfAPath()*(x2 -x1)))		
-			self.truckObj[TruckNum].setPosition_y_Coordinates(y1+float(self.truckObj[TruckNum].getTimeLeftOnPath()/self.truckObj[TruckNum].getTimeOfAPath()*(y2 -y1)))
-			'''
-			sets the x and y position of the of the truck after movement
-			where x,y = (stepLeft/stepSize)*(x2-x1)
-			'''
-			
-			self.truckObj[TruckNum].setNewTimeLeft() #adjust the steps of the order
-			
-			#blits the truck to thr correct position on the screem
-			self.screen.blit(self.truck,(self.truckObj[TruckNum].getPosition_x_Coordinates()-10,self.truckObj[TruckNum].getPosition_y_Coordinates()-10))
-			print('truck moved on the striaht')
+			self.moveTruckStright(indexNode,nextNode,TruckNum)
 		
 		else: #moving the truck along a curved line
 			
-			stepLength = int(stepSize*self.truckObj[TruckNum].getTimeLeftOnPath())#get the number of line lengths to go for the the line
-			stepDec = float(stepSize*self.truckObj[TruckNum].getTimeLeftOnPath()) - stepLength #+ 1		#this gives the decimal of how far along the line the points will be
-			print('step dist and decimal ')
-			print(stepLength)
-			print(stepDec)
-			
-			list_curV = self.graphViz.getLine(indexNode,nextNode) #list of points to give the graph its "curV" (V -> vertex)
-			lineStart = list_curV[stepLength - 1]
-			lineEnd = list_curV[stepLength]
-			xDiff = float((lineStart[0] - lineEnd[0])*stepDec)	#getting the amount of the line that should be traveled i the x direction
-			yDiff = float((lineStart[1] - lineEnd[1])*stepDec)	#getting the amount of the line that should be traveled i the x direction
-		
-			self.truckObj[TruckNum].setPosition_x_Coordinates(self.width*(xDiff + lineStart[0]))		#sets the truck positions to its new coordinates in the x direction
-			self.truckObj[TruckNum].setPosition_y_Coordinates(self.height*(yDiff + lineStart[1]))		#sets the truck positions to its new coordinates in the y direction
-			self.truckObj[TruckNum].setNewTimeLeft() #incraments the truck time on the path by one
-			
-			self.screen.blit(self.truck,(self.truckObj[TruckNum].getPosition_x_Coordinates()-10,self.truckObj[TruckNum].getPosition_y_Coordinates()-10))
-			print('truck moved on the curve')
+			self.moveTruckCurved(stepSize,indexNode,nextNode,TruckNum)
 			
 			
 		if self.truckObj[TruckNum].getTimeLeftOnPath() > self.truckObj[TruckNum].getTimeOfAPath(): #resest the next node if it done on path between vertex's
 			
-			if self.orders[orderNumber][0] == self.truckObj[self.orders[orderNumber][2]].getEndPosition(): #updating the trucks positions when its traveling to the order
+			#updating the trucks positions when its traveling to the order
+			
+			'''
+			Likely will need to change this logic once the warehouses are added to this part 
+			
+			'''
+			if self.orderInfo[orderNumber]['Current Position'] == self.truckObj[self.orderInfo[orderNumber]['Truck Used']].getEndPosition(): 
+				#updating the trucks positions when its traveling to the order
 
 				self.truckObj[TruckNum].setNewPosition(nextNode)
+				self.truckObj[TruckNum].setEndPosition(self.orderInfo[orderNumber]['End Position']) #Added in with new additions, remove if fucked
 
 				print('new truck position befor the order')
 				
 			else:			#the truck moving with the order to the orders end position
-				self.orders[orderNumber][0] = nextNode
+				
+				self.orderInfo[orderNumber]['Current Position'] = nextNode
 				self.truckObj[TruckNum].setNewPosition(nextNode)
 				print('Trukc going to a new position with the order')
 			#all below here needs to be adjusted for when the truck reaches a new node
@@ -259,6 +266,64 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 																self.graphViz.getNextNode(self.truckObj[TruckNum].getPosition(),self.truckObj[TruckNum].getEndPosition()))))
 
 	
+		
+	def moveTruckToOrderDest(self,orderNumber,indexNode,TruckNum):
+		
+		self.truckObj[self.orderInfo[orderNumber]['Truck Used']].setEndPosition(self.orderInfo[orderNumber]['End Position']) 
+			
+		#sets a new end position of the truck to be the same as the orders end node
+		
+		
+		print('new truck position for the going to order')
+		
+		self.truckObj[TruckNum].setPosition_x_Coordinates(float(self.vtxPosit[indexNode][0]))
+		self.truckObj[TruckNum].setPosition_y_Coordinates(float(self.vtxPosit[indexNode][1]))
+		#set the new x and y coordinates of the truck
+
+		#add the new time for the next Edge and a new time on path of 1, 
+		self.truckObj[TruckNum].setTimeOfaNewPath(float(self.graphViz.getTime(self.truckObj[TruckNum].getPosition(),
+															self.graphViz.getNextNode(self.truckObj[TruckNum].getPosition(),self.truckObj[TruckNum].getEndPosition()))))
+		
+	
+	def moveTruckStright(self,indexNode,nextNode,TruckNum):
+		x1 = float(self.vtxPosit[indexNode][0]) #the x position of a a line start
+		y1 = float(self.vtxPosit[indexNode][1]) #the y positin of aline start
+		x2=  float(self.vtxPosit[nextNode][0])  #the x position of a lines end
+		y2 = float(self.vtxPosit[nextNode][1]) #the y position of a lines end
+		
+		self.truckObj[TruckNum].setPosition_x_Coordinates(x1+float(self.truckObj[TruckNum].getTimeLeftOnPath()/self.truckObj[TruckNum].getTimeOfAPath()*(x2 -x1)))		
+		self.truckObj[TruckNum].setPosition_y_Coordinates(y1+float(self.truckObj[TruckNum].getTimeLeftOnPath()/self.truckObj[TruckNum].getTimeOfAPath()*(y2 -y1)))
+		'''
+		sets the x and y position of the of the truck after movement
+		where x,y = (stepLeft/stepSize)*(x2-x1)
+		'''
+		
+		self.truckObj[TruckNum].setNewTimeLeft() #adjust the steps of the order
+		
+		#blits the truck to thr correct position on the screem
+		self.screen.blit(self.truck,(self.truckObj[TruckNum].getPosition_x_Coordinates()-10,self.truckObj[TruckNum].getPosition_y_Coordinates()-10))
+		#print('truck moved on the striaht')
+		
+		
+	def moveTruckCurved(self,stepSize,indexNode,nextNode,TruckNum):
+		stepLength = int(stepSize*self.truckObj[TruckNum].getTimeLeftOnPath())#get the number of line lengths to go for the the line
+		stepDec = float(stepSize*self.truckObj[TruckNum].getTimeLeftOnPath()) - stepLength #+ 1		#this gives the decimal of how far along the line the points will be
+		#print('step dist and decimal ')
+		#print(stepLength)
+		#print(stepDec)
+		
+		list_curV = self.graphViz.getLine(indexNode,nextNode) #list of points to give the graph its "curV" (V -> vertex)
+		lineStart = list_curV[stepLength - 1]
+		lineEnd = list_curV[stepLength]
+		xDiff = float((lineStart[0] - lineEnd[0])*stepDec)	#getting the amount of the line that should be traveled i the x direction
+		yDiff = float((lineStart[1] - lineEnd[1])*stepDec)	#getting the amount of the line that should be traveled i the x direction
+	
+		self.truckObj[TruckNum].setPosition_x_Coordinates(self.width*(xDiff + lineStart[0]))		#sets the truck positions to its new coordinates in the x direction
+		self.truckObj[TruckNum].setPosition_y_Coordinates(self.height*(yDiff + lineStart[1]))		#sets the truck positions to its new coordinates in the y direction
+		self.truckObj[TruckNum].setNewTimeLeft() #incraments the truck time on the path by one
+		
+		self.screen.blit(self.truck,(self.truckObj[TruckNum].getPosition_x_Coordinates()-10,self.truckObj[TruckNum].getPosition_y_Coordinates()-10))
+		#print('truck moved on the curve')
 		
 	def findTruckForOrder(self,orderNumber):
 		
@@ -271,7 +336,8 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 			#add something to do with capacity here in part 2
 			if self.truckObj[i].isTruckInUse() == False:
 				self.truckObj[i].setTruckUsage(True)
-				self.orders[orderNumber][2]=i
+				#self.orders[orderNumber][2]=i
+				self.orderInfo[orderNumber]['Truck Used'] = i
 				truckNum = i
 				break
 		print('truck object key and then orders key')
@@ -279,8 +345,10 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 		if truckNum != -1: #this is true if a new truck was found for the 
 			self.truckObj[truckNum].setNewOrderForTruck(orderNumber)
 			self.setNewTruckForOrder(orderNumber, truckNum)
+			#return truckNum
 		else:
-			self.orders[orderNumber].append(None)
+			self.orderInfo[orderNumber]['Truck Used'] = None
+			
 			
 	
 	
@@ -290,11 +358,11 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks):
 		#This needs to changed based upon if a truck is going to an order, warehouse or production site in part 2
 		
 		
-		self.truckObj[truckNumber].setEndPosition(self.orders[orderNumber][0])
+		self.truckObj[truckNumber].setEndPosition(self.orderInfo[orderNumber]['Current Position'])
 
 		self.truckObj[truckNumber].setTimeOfaNewPath(float(self.graphViz.getTime(self.truckObj[truckNumber].getPosition(),
 																self.graphViz.getNextNode(self.truckObj[truckNumber].getPosition(),self.truckObj[truckNumber].getEndPosition()))))
-	
+		#return truckNumber
 
   	'''WMW'''
 

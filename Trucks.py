@@ -1,9 +1,8 @@
 '''
-Created on Apr 17, 2020
+Created on Apr 22, 2020
 
 @author: Thoma
 '''
-
 
 class Trucks(object):
     def __init__(self,id,startNode,capacity,pos):
@@ -73,6 +72,3 @@ class Trucks(object):
     def getTruckID(self):
         return self.truck['Order'][0]
         
-        
-        
-    
