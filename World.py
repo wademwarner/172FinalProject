@@ -232,37 +232,34 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		#create the order dictionary
 		for i in range(ordL):
 			
-			print(ordL-i-1)
-			print orderProcess[ordL-i-1]
-			print orderProcess[ordL-i-1]['processingTime']
-			print orderProcess[ordL-i-1]['materialNeeded[tons]']
-			print orderProcess[ordL-i-1]['resourceNeeded']
-			res = orderProcess[ordL-i-1]['resourceNeeded']
-			mat = orderProcess[ordL-i-1]['materialNeeded[tons]']
-			time = orderProcess[ordL-i-1]['processingTime']
-		
-			self.order_sequence[orderNum] = {(ordL-i):{'Process Time': orderProcess[ordL-i-1]['processingTime'],
-											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
-											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
-											'Production Line': 0}}
-			'''
-			self.order_sequence[orderNum][ordL - i] = {'Process Time': orderProcess[ordL-i-1]['processingTime'],
-											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
-											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
-											'Production Line': 0}
-			'''
-
+			print('Index number')
+			print(i)
+			
+			
 			if (ordL-i)!= ordL:
-				self.order_sequence[orderNum][ordL-i]['Production Line'] = self.findOrderPath(orderNum, 
+				self.order_sequence[orderNum].append({(ordL-i) : {'Process Time': orderProcess[ordL-i-1]['processingTime'],
+											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
+											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
+											'Production Line': 0}})
+				
+				self.order_sequence[orderNum][i][ordL-i]['Production Line'] = self.findOrderPath(orderNum, 
 																							orderProcess[ordL-i-1]['processinLine'], 
-																							self.order_sequence[orderNum][ordL-i]['Production Line'])
-			else:
-				self.order_sequence[orderNum][ordL - i]['Production Line'] = self.findOrderPath(orderNum, 
+																							self.order_sequence[orderNum][i-1][ordL-i + 1]['Production Line'])
+				
+				
+			else: #first iteration through the forloop 
+				self.order_sequence[orderNum] = [{(ordL-i):{'Process Time': orderProcess[ordL-i-1]['processingTime'],
+											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
+											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
+											'Production Line': 0}}]
+				self.order_sequence[orderNum][i][ordL-i]['Production Line'] = self.findOrderPath(orderNum, 
 																							orderProcess[ordL-i-1]['processinLine'], 
 																							endNode)
 		
+		print('the order sequence is')
+		print self.order_sequence[orderNum]
 		
-		self.orderInfo[orderNum] = {'Current Node':self.order_sequence[orderNum][1]['Production Line'],
+		self.orderInfo[orderNum] = {'Current Node':self.order_sequence[orderNum][ordL-1][1]['Production Line'],
 								'End Node':endNode, #maybe change this to the 2nd step location
 								'Truck Used':None, 
 								'Delivery Location':'No idea what I meant by this??', #take out if nothing is added later in this spot
@@ -270,10 +267,24 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 								'Order Step':1, 
 								'Order TIS':0}
 		
-		print('the order sequence is')
-		print self.order_sequence[orderNum]
+
 		print('the order info is ')
 		print self.orderInfo[orderNum]
+			
+		'''
+			self.order_sequence[orderNum] = {(ordL-i):{'Process Time': orderProcess[ordL-i-1]['processingTime'],
+											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
+											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
+											'Production Line': 0}}
+											
+		
+			
+			self.order_sequence[orderNum][ordL - i] = {'Process Time': orderProcess[ordL-i-1]['processingTime'],
+											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
+											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
+
+		'''
+			
 		
 	'''
 	Need to figure out the exact nodes of produciton facilities the order will go to from the findOrderPath method
@@ -322,7 +333,10 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 			
 			if self.orderInfo[orderNumber]['Current Position'] == self.orderInfo[orderNumber]['End Position']: 
 				#Deleting the order and freeing up the truck once the order has been fulfilled
-				print('we done with the animation now!!!!!!')
+				'''
+				change this for when the truck reaches its end node for delviery and record profit/loss here
+				Have a similar statement for the trucks bringing stuff to a warehouse so that trucks can be released for new tasks 
+				'''
 				self.truckObj[TruckNum].setTruckUsage(False)
 				
 				#del self.orderInfo[orderNumber]
@@ -380,7 +394,9 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 
 	
 		
-	def moveTruckToOrderDest(self,orderNumber,indexNode,TruckNum):
+	def moveTruckToOrderDest(self,orderNumber,indexNode,TruckNum): 
+		
+		#this needs to be changed for part 2
 		
 		self.truckObj[self.orderInfo[orderNumber]['Truck Used']].setEndPosition(self.orderInfo[orderNumber]['End Position']) 
 			
