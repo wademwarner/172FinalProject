@@ -192,17 +192,27 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 				
 				stepL = len(self.order_sequence[i])
 				step = self.orderInfo[i]['Order Step']
-				currentProdLine = self.order_sequence[i][stepL-step][step]['Production Line']
+				
 				
 				if self.orderInfo[i]['Finished']:
+					print(i)
+					print(self.orderInfo[i]['Order TIS'])
+					del self.orderInfo[i]
 					continue 
 					'''
 					The order has been delviered to its final location 
 					Record the Profit/loss of the order  
 					'''
 				
+				print(i)
+				print(self.orderInfo[i])
+				print(stepL-step)
+				print(step)
+				print(stepL)
+				print(self.orderInfo[i]['Current Node'])
+				print(self.order_sequence[i])
 					
-				
+				currentProdLine = self.order_sequence[i][stepL-step][step]['Production Line']
 				
 				if self.orderInfo[i]['Order TIS'] == 0: #iterates through when the order if first created
 					if self.ProductionInfo[currentProdLine]['Capacity Held'] >= self.order_sequence[i][stepL-step][step]['Material']:
@@ -289,7 +299,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 						
 						self.orderInfo[i]['Order Step'] += 1
 						step += 1
-						if step >= stepL:
+						if step >= (stepL-1):
 							self.truckObj[self.orderInfo[i]['Truck Used']].setEndPosition(self.orderInfo[i]['End Node'])
 							self.orderInfo[i]['Order Process'] = 4
 						else:
@@ -303,10 +313,12 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 					#order is being produced
 					
 				else:
-					if step == (stepL-1):
+					if step >= (stepL-1):
+						self.orderInfo[i]['Order Process'] = 4
 						self.moveTruck(i,self.orderInfo[i]['Truck Used'],self.orderInfo[i]['Current Node'],
 									self.orderInfo[i]['End Node'],4)
 					else:
+						self.orderInfo[i]['Order Process'] = 3
 						self.moveTruck(i,self.orderInfo[i]['Truck Used'],self.orderInfo[i]['Current Node'],
 									self.order_sequence[i][stepL-step][step]['Production Line'],3)
 					#order is going to the next order location 
@@ -539,7 +551,8 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 					if self.ProductionInfo[currentProdLine]['Capacity Held'] >= self.order_sequence[orderNumber][stepL-step][step]['Material']: 
 					#checks to see if material needed is there and if the production facility is able to produce cars
 					
-						self.orderInfo[orderNumber]['Current Node']['Order Process'] = 2 #order now being produced
+						self.orderInfo[orderNumber]['Order Process'] = 2 
+						#order now being produced
 						
 						
 						
@@ -566,7 +579,8 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 					self.orderInfo[orderNumber]['Finished'] = True
 					self.orderInfo[orderNumber]['Truck Used'] = None
 					self.truckObj[TruckNum].setTruckUsage(False)
-				
+				else:
+					self.orderInfo[orderNumber]['Current Node'] = nextNode
 					
 			if self.orderInfo[orderNumber]['Truck Used'] != None: #if the order is still in productin, set new positions for the order and truck	
 				self.truckObj[TruckNum].setNewPosition(nextNode)
