@@ -120,6 +120,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		'''
 		print(self.ProductionLines) -Currently we are not looking at capacity for these, only bring what is needed for each step
 		{'L4': [89, 84, 168, 153, 26], 'L2': [82, 10, 174, 186, 185], 'L3': [1, 15, 3, 13, 32], 'L1': [119, 141, 181, 46, 25]}
+		
 		Bellow is a nested for loop to add the capacity and usage condition to all the production site with their node as the key 
 		This is needed for determining if an order can be procesed and if material is needed for that specific order also 
 		'''
@@ -185,37 +186,67 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 			self.screen.fill((255, 255, 255))
 			self.screen.blit(text, textrect)
 			self.appearances()              #used so that the vertices are shown on the screen
-			'''	
+			
+			
 			for i in self.orderInfo.keys(): #maybe make everything in this for loop into a method 
 				
+				stepL = len(self.order_sequence[i])
+				step = self.orderInfo[i]['Order Step']
 				
-			
-				for the step 2 we need a method for moving the materials to the production line
-				need one to move the truck which is already there 
-				
-				
-				if material is in transit no order produciton is going on at that porduction site but the truck needs to transport and it 
-						NEED SOMETHING IN THE ORDER DICTIONARY FOR THE 
-			
-				
-				
-				if self.orderInfo[i]['Truck Used'] != None and self.orderInfo[i]['Finished'] == False:
+				if self.orderInfo[i]['Order TIS'] == 0: #iterates through when the order if first created
+					if self.ProductionInfo[self.orderInfo[i]['Current Node']]['Capacity Held'] >= self.order_sequence[i][stepL-step]['Material']:
+						#start the order production
+						self.orderInfo[i]['Order Process'] = 2
+						
+					else: #finding the warehouse closest ot the production site
+						resLocation = self.findClosestWarehouse(self.orderInfo[i]['Current Node'], self.order_sequence[i][stepL-step]['Resource']) 
+						self.orderInfo[i]['Order Process'] = 1
+						self.findTruckForOrder(i,resLocation,self.order_sequence[i][stepL-step]['Material'],1)
+						
+						
+						'''
+						have truck get material 
+						
+						Assign this truck to be the orders truck in orderInfo['Truck Used']
+						'''
+				elif self.orderInfo[i]['Order Process'] == 0:
+					pass
+					#order is waiting for a truck still at the first location
 					
-					if self.orderInfo[i]['Current Position'] == self.truckObj[self.orderInfo[i]['Truck Used']].getEndPosition():
-						
-						#moving the truck when the it is on its way to the order!
-						
-						self.moveTruck(i,self.orderInfo[i]['Truck Used'],self.truckObj[self.orderInfo[i]['Truck Used']].getPosition(),
-									self.truckObj[self.orderInfo[i]['Truck Used']].getEndPosition())
-							
-												
-					else:
-						print('Truck going with order')
-							#Animate the movement of each truck
-						self.moveTruck(i,self.orderInfo[i]['Truck Used'],self.truckObj[self.orderInfo[i]['Truck Used']].getPosition(),
-									self.orderInfo[i]['End Position'])
+				elif self.orderInfo[i]['Order Process'] == 1:
+					pass
+					#order is waiting for material
+					
+				elif self.orderInfo[i]['Order Process'] == 2:
+					pass
+					#order is being produced
+					
 				else:
-					self.findTruckForOrder(i) #seeing if a truck has been freed up form last go around
+					pass
+					#order is going to the next order location 
+				
+				
+				
+				
+				
+				self.orderInfo[i]['Order TIS'] += 1
+				
+				
+			
+	
+				
+			'''	
+			ProductionInfo = {'Capacity Max':100, 'Capacity Held':0, 'In Use': False}
+			
+			order_sequence = [{(ordL-i):{'Process Time': ,'Material':,'Resource':,'Production Line': 0}}]
+			
+			orderInfo =	{'Current Node':,'End Node':,'Truck Used':None,'Delivery Location','Finished':False,'Order Step':1,'Order TIS':0,'Order Process':0}
+						
+							0-order was created and nothing has happened 
+							1-order is waiting for material at a production site
+							2-order is being produced
+							3-order is moving to the next location 
+							
      		'''
 			pygame.display.update()	
 			for event in pygame.event.get():
@@ -231,11 +262,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		print(ordL)
 		#create the order dictionary
 		for i in range(ordL):
-			
-			print('Index number')
-			print(i)
-			
-			
+				
 			if (ordL-i)!= ordL:
 				self.order_sequence[orderNum].append({(ordL-i) : {'Process Time': orderProcess[ordL-i-1]['processingTime'],
 											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
@@ -252,6 +279,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
 											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
 											'Production Line': 0}}]
+	
 				self.order_sequence[orderNum][i][ordL-i]['Production Line'] = self.findOrderPath(orderNum, 
 																							orderProcess[ordL-i-1]['processinLine'], 
 																							endNode)
@@ -259,31 +287,36 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		print('the order sequence is')
 		print self.order_sequence[orderNum]
 		
+		'''
+		[{3: {'Material': 3, 'Resource': 'E', 'Production Line': 13, 'Process Time': 6}}, 
+		{2: {'Material': 9, 'Resource': 'G', 'Production Line': 84, 'Process Time': 5}}, 
+		{1: {'Material': 9, 'Resource': 'B', 'Production Line': 46, 'Process Time': 5}}]
+		
+		'''
+		
 		self.orderInfo[orderNum] = {'Current Node':self.order_sequence[orderNum][ordL-1][1]['Production Line'],
 								'End Node':endNode, #maybe change this to the 2nd step location
 								'Truck Used':None, 
-								'Delivery Location':'No idea what I meant by this??', #take out if nothing is added later in this spot
+								'Delivery Location':self.order_sequence[orderNum][ordL-2][1]['Production Line'], #
 								'Finished':False,
 								'Order Step':1, 
-								'Order TIS':0}
+								'Order TIS':0,
+								'Order Process':0}
+							'''
+							0-order was created andnothing has happened 
+							1-order is waiting for material at a production site
+							2-order is being produced
+							3-order is moving to the next location 
+							
+							'''
+		
+		
 		
 
 		print('the order info is ')
 		print self.orderInfo[orderNum]
 			
-		'''
-			self.order_sequence[orderNum] = {(ordL-i):{'Process Time': orderProcess[ordL-i-1]['processingTime'],
-											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
-											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
-											'Production Line': 0}}
-											
 		
-			
-			self.order_sequence[orderNum][ordL - i] = {'Process Time': orderProcess[ordL-i-1]['processingTime'],
-											'Material': orderProcess[ordL-i-1]['materialNeeded[tons]'],
-											'Resource': orderProcess[ordL-i-1]['resourceNeeded'],
-
-		'''
 			
 		
 	'''
@@ -315,8 +348,24 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 				
 		return optimalLocation
 	
-	def findClosestWarehouse(self):
-		pass
+	def findClosestWarehouse(self,prodLoc, materialType): #finding the warehouse closest to the production site being used 
+		smallestDist = 1000
+		distHold = 0
+		optimalLocation = 0
+		
+		for i in range(len(self.facilObj.warehouses[materialType])):
+			distHold = self.graphViz.find_pathLength(self.facilObj.warehouses[materialType][i],prodLoc) 
+			if distHold < smallestDist:
+				smallestDist = distHold
+				optimalLocation = self.facilObj.warehouses[materialType][i]
+				
+		return optimalLocation
+	
+	
+	'''
+	{'L4': [89, 84, 168, 153, 26], 'L2': [82, 10, 174, 186, 185], 'L3': [1, 15, 3, 13, 32], 'L1': [119, 141, 181, 46, 25]}
+	{'A': [37, 0], 'C': [5, 91], 'B': [208, 98], 'E': [140, 200], 'D': [20, 33], 'G': [68, 16], 'F': [165, 147], 'H': [111, 172]}
+	'''
 
 	def moveTruck(self,orderNumber,TruckNum,indexNode,end):  #problems here likely means problems in the graph class path finding algorithm
 
@@ -454,40 +503,47 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		self.screen.blit(self.truck,(self.truckObj[TruckNum].getPosition_x_Coordinates()-10,self.truckObj[TruckNum].getPosition_y_Coordinates()-10))
 		#print('truck moved on the curve')
 		
-	def findTruckForOrder(self,orderNumber):
+	def findTruckForOrder(self,orderNumber,resourseLocation,materialNeeded,Task):
+		'''
+		Task = 1 if the truck is staying with the order the whole time
+		Task = 2 if the truck is just delviering material 
+		
+		'''
 		
 		truckNum = -1
 		'''
 		this gets a new truck for any order so it can be moved
 		'''
+		#change for part two or remove 
 		
 		for i in self.truckObj.keys():
-			#add something to do with capacity here in part 2
-			if self.truckObj[i].isTruckInUse() == False:
+			#Checking to see if trucks are avaliable and they have enough capacity for the material that is needed
+			if self.truckObj[i].isTruckInUse() == False and self.truckObj.getTruckCapacity() >= materialNeeded:
 				self.truckObj[i].setTruckUsage(True)
-				#self.orders[orderNumber][2]=i
-				self.orderInfo[orderNumber]['Truck Used'] = i
 				truckNum = i
 				break
-		print('truck object key and then orders key')
+		
 		
 		if truckNum != -1: #this is true if a new truck was found for the 
 			self.truckObj[truckNum].setNewOrderForTruck(orderNumber)
-			self.setNewTruckForOrder(orderNumber, truckNum)
-			#return truckNum
+			if Task == 1:
+				self.setNewTruckForOrder(truckNum,resourseLocation)
+				
+			else:
+				self.set
+			return truckNum
 		else:
-			self.orderInfo[orderNumber]['Truck Used'] = None
 			
+			return None
 			
 	
 	
 	
-	
-	def setNewTruckForOrder(self,orderNumber,truckNumber): #this sets the truck up to move to the order postion
-		#This needs to changed based upon if a truck is going to an order, warehouse or production site in part 2
+	def setNewTruckForOrder(self,truckNumber,resourseLocation): #Will move a truck to the warehouse loaction 
 		
+		#change this for part 2
 		
-		self.truckObj[truckNumber].setEndPosition(self.orderInfo[orderNumber]['Current Position'])
+		self.truckObj[truckNumber].setEndPosition(resourseLocation)
 
 		self.truckObj[truckNumber].setTimeOfaNewPath(float(self.graphViz.getTime(self.truckObj[truckNumber].getPosition(),
 																self.graphViz.getNextNode(self.truckObj[truckNumber].getPosition(),self.truckObj[truckNumber].getEndPosition()))))
