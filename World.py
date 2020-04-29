@@ -96,6 +96,8 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		
 		self.truckObj = {} #dictionary to hold all the truck objects 
 		
+		self.extraTruck = {}
+		
 		
 	def runSimulation(self, fps=1, initialTime=5*60, finalTime=23*60):
 
@@ -197,6 +199,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 				if self.orderInfo[i]['Finished']:
 					print(i)
 					print(self.orderInfo[i]['Order TIS'])
+					
 					del self.orderInfo[i]
 					continue 
 					'''
@@ -234,11 +237,6 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 						self.findTruckForOrder(i,resLocation,self.order_sequence[i][stepL-step][step]['Material'],1)
 						
 						
-						'''
-						have truck get material 
-						
-						Assign this truck to be the orders truck in orderInfo['Truck Used']
-						'''
 				
 					'''
 					0-order was created and nothing has happened 
@@ -278,6 +276,19 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 					
 					Adda new method to see if material is needed or call it when we set orderStage to 2
 					'''
+					if (step +1) < (stepL-1):
+						if self.ProductionInfo[self.order_sequence[i][stepL-step-1][step+1]['Production Line']]['Material Held'] < self.order_sequence[i][stepL-step-1][step+1]['Material']:
+							'''
+							send truck to get material 
+							'''
+							if i not in self.extraTruck.keys():
+								resLocation = self.findClosestWarehouse(self.order_sequence[i][stepL-step-1][step+1]['Production Line'], 
+																	self.order_sequence[i][stepL-step-1][step+1]['Resource']) 
+								self.findTruckForOrder(i,resLocation,self.order_sequence[i][stepL-step-1][step+1]['Material'],2)
+							self.moveExtraTruck(self.truckObj[self.extraTruck[i]].getPosition(),self.truckObj[self.extraTruck[i]].getEndPosition(),self.extraTruck[i],i)
+				
+					
+					
 					if self.ProductionInfo[currentProdLine]['In Use'] == i: #seeing if the productin line is being used by this order
 						pygame.draw.rect(self.screen, self.green,(self.vtxPosit[self.orderInfo[i]['Current Node']][0]-2,
 																self.vtxPosit[self.orderInfo[i]['Current Node']][1]-2,4,4))
@@ -397,8 +408,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 								'Finished':False,
 								'Order Step':1, 
 								'Order TIS':0,
-								'Order Process':0}
-		
+								'Order Process':0}		
 								#'Delivery Location':self.order_sequence[orderNum][ordL-2][2]['Production Line'], 
 		
 		
@@ -463,6 +473,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		nextNode = self.graphViz.getNextNode(indexNode,end) #figure out the next node the truck is traveling to
 	
 		stepSize = float((self.graphViz.getLineLength(indexNode,nextNode)-1)/self.truckObj[TruckNum].getTimeOfAPath())
+
 		#add in an ending condition here eventually 
 		'''
 		orderStage == 1 - move the truck to the order location after picking up material at a warehouse
@@ -489,8 +500,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 				
 				self.moveTruckCurved(stepSize,indexNode,nextNode,TruckNum)
 		
-		elif orderStage == 2: #we may not need this 
-			pass
+		
 		
 		else:
 			if self.graphViz.isLineStraight(indexNode,nextNode): #animation for if the line is straight
@@ -556,7 +566,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 						
 						
 						
-						if self.ProductionInfo[currentProdLine]['In Use'] != None:
+						if self.ProductionInfo[currentProdLine]['In Use'] == None:
 							self.ProductionInfo[currentProdLine]['In Use'] = orderNumber
 						
 						materialLeft = self.truckObj[TruckNum].getTruckCapacity() - self.order_sequence[orderNumber][stepL-step][step]['Material']
@@ -602,29 +612,59 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 			orderInfo =	{'Current Node':,'End Node':,'Truck Used':None,'Delivery Location','Finished':False,'Order Step':1,'Order TIS':0,'Order Process':0}
 			'''
 	
-	def findOrderStage(self): #looking to see if the order has changed form its stage of waiting for material, being produced or moving to the next location
-		pass	
+	def moveExtraTruck(self,indexNode,end,TruckNum,orderNum):#animating and mving the truck transporting material to production sites
+		nextNode = self.graphViz.getNextNode(indexNode,end) #figure out the next node the truck is traveling to
 	
+		stepSize = float((self.graphViz.getLineLength(indexNode,nextNode)-1)/self.truckObj[TruckNum].getTimeOfAPath())
+		#animating the movement
+		stepL = len(self.order_sequence[orderNum])
+		step = self.orderInfo[orderNum]['Order Step']
+		
+		if self.graphViz.isLineStraight(indexNode,nextNode): #animation for if the line is straight
 	
-	def moveTruckToOrderDest(self,orderNumber,indexNode,TruckNum): #DELETE IF NOT USED IN PART 2
+			self.moveTruckStright(indexNode,nextNode,TruckNum)
 		
-		#this needs to be changed for part 2
-		
-		self.truckObj[self.orderInfo[orderNumber]['Truck Used']].setEndPosition(self.orderInfo[orderNumber]['End Node']) 
+		else: #moving the truck along a curved line
+				
+			self.moveTruckCurved(stepSize,indexNode,nextNode,TruckNum)
 			
-		#sets a new end position of the truck to be the same as the orders end node
-		
-		
-		print('new truck position for the going to order')
-		
-		self.truckObj[TruckNum].setPosition_x_Coordinates(float(self.vtxPosit[indexNode][0]))
-		self.truckObj[TruckNum].setPosition_y_Coordinates(float(self.vtxPosit[indexNode][1]))
-		#set the new x and y coordinates of the truck
-
-		#add the new time for the next Edge and a new time on path of 1, 
-		self.truckObj[TruckNum].setTimeOfaNewPath(float(self.graphViz.getTime(self.truckObj[TruckNum].getPosition(),
-															self.graphViz.getNextNode(self.truckObj[TruckNum].getPosition(),self.truckObj[TruckNum].getEndPosition()))))
-		
+		#see if truck is at a new node
+		if self.truckObj[TruckNum].getTimeLeftOnPath() > self.truckObj[TruckNum].getTimeOfAPath():
+			
+			if nextNode == self.order_sequence[orderNum][stepL-step][step]['Production Line']: #material at production site
+				currentProdLine = self.order_sequence[orderNum][stepL-step-1][step+1]['Production Line']
+				
+				if self.ProductionInfo[currentProdLine]['Capacity Held'] >= self.order_sequence[orderNum][stepL-step][step]['Material']: 
+				#checks to see if material needed is there and if the production facility is able to produce cars
+				
+					
+					
+					if self.ProductionInfo[currentProdLine]['In Use'] == None:
+						self.ProductionInfo[currentProdLine]['In Use'] = orderNum
+					
+					materialLeft = self.truckObj[TruckNum].getTruckCapacity() - self.order_sequence[orderNum][stepL-step-1][step+1]['Material']
+					self.ProductionInfo[currentProdLine]['Capacity Held'] += materialLeft
+					
+					truckID = self.extraTruck[orderNum]
+					del self.extraTruck[orderNum]
+					self.truckObj[truckID].setTruckUsage(False)
+					
+			
+			elif nextNode == self.truckObj[orderNum].getEndPosition(): #material is at the warehouse
+				
+				self.truckObj[orderNum].setEndPosition(currentProdLine)
+			
+			self.truckObj[TruckNum].setNewPosition(nextNode)
+						
+					
+			self.truckObj[TruckNum].setPosition_x_Coordinates(float(self.vtxPosit[nextNode][0]))
+			self.truckObj[TruckNum].setPosition_y_Coordinates(float(self.vtxPosit[nextNode][1]))
+			
+			self.truckObj[TruckNum].setTimeOfaNewPath(float(self.graphViz.getTime(self.truckObj[TruckNum].getPosition(),
+																self.graphViz.getNextNode(self.truckObj[TruckNum].getPosition(),self.truckObj[TruckNum].getEndPosition()))))	
+				
+			
+	
 	
 	def moveTruckStright(self,indexNode,nextNode,TruckNum):
 		x1 = float(self.vtxPosit[indexNode][0]) #the x position of a a line start
@@ -712,7 +752,8 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 			if Task == 1:
 				self.setNewTruckForOrder(truckNum,resourseLocation)
 				self.orderInfo[orderNumber]['Truck Used'] = truckNum
-			else:
+			else:	#assigning a truck moving to delvier stuff without the order 
+				self.extraTruck[orderNumber] = truckNum
 				self.setNewTruckForOrder(truckNum,resourseLocation)
 			
 		else:
