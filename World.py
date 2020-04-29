@@ -44,7 +44,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 
 		self.blue = (0,0,255)
 
-		self.red = (255,0,0)
+		self.red = (255,0,0)		#color of order when it is waiting to be produced 
 
 		self.green =(0,255,0)
 
@@ -197,6 +197,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 					if self.ProductionInfo[self.orderInfo[i]['Current Node']]['Capacity Held'] >= self.order_sequence[i][stepL-step]['Material']:
 						#start the order production
 						self.orderInfo[i]['Order Process'] = 2
+						self.getOrderTruck(i)
 						
 					else: #finding the warehouse closest ot the production site
 						resLocation = self.findClosestWarehouse(self.orderInfo[i]['Current Node'], self.order_sequence[i][stepL-step]['Resource']) 
@@ -210,23 +211,52 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 						Assign this truck to be the orders truck in orderInfo['Truck Used']
 						'''
 				elif self.orderInfo[i]['Order Process'] == 0:
-					pass
-					#order is waiting for a truck still at the first location
+					if self.ProductionInfo[self.orderInfo[i]['Current Node']]['Capacity Held'] >= self.order_sequence[i][stepL-step]['Material']:
+						#start the order production
+						self.orderInfo[i]['Order Process'] = 2
+						self.getOrderTruck(i)
+						
+					else: #finding the warehouse closest to the production site
+						resLocation = self.findClosestWarehouse(self.orderInfo[i]['Current Node'], self.order_sequence[i][stepL-step]['Resource']) 
+						self.orderInfo[i]['Order Process'] = 1
+						self.findTruckForOrder(i,resLocation,self.order_sequence[i][stepL-step]['Material'],1)
 					
 				elif self.orderInfo[i]['Order Process'] == 1:
-					pass
+					'''
+					Animate the order location
+					move the truck to the order location as red
+					'''
+					pygame.draw.rect(self.screen, self.red,(self.vtxPosit[self.orderInfo[i]['Current Node']][0]-2,
+															self.vtxPosit[self.orderInfo[i]['Current Node']][1]-2,5,5))
+					
+					self.moveTruck(i,self.orderInfo[i]['Truck Used'],self.truckObj[self.orderInfo[i]['Truck Used']].getPosition(),
+								self.truckObj[self.orderInfo[i]['Truck Used']].getEndPosition())
 					#order is waiting for material
 					
+					
 				elif self.orderInfo[i]['Order Process'] == 2:
-					pass
+					'''
+					animate the order as being produced as green
+					incrament the process time down by one 
+					'''
+					pygame.draw.rect(self.screen, self.green,(self.vtxPosit[self.orderInfo[i]['Current Node']][0]-2,
+															self.vtxPosit[self.orderInfo[i]['Current Node']][1]-2,5,5))
+					self.order_sequence[i][stepL-step]['Process Time'] -= 1
+					
 					#order is being produced
 					
 				else:
-					pass
+					if step == (stepL-1):
+						self.moveTruck(i,self.orderInfo[i]['Truck Used'],self.orderInfo[i]['Current Node'],
+									self.orderInfo[i]['End Node'])
+					else:
+						self.moveTruck(i,self.orderInfo[i]['Truck Used'],self.orderInfo[i]['Current Node'],
+									self.order_sequence[i][stepL-step+1]['Production Line'])
 					#order is going to the next order location 
 				
 				
-				
+				stepL = len(self.order_sequence[i])
+				step = self.orderInfo[i]['Order Step']
 				
 				
 				self.orderInfo[i]['Order TIS'] += 1
@@ -503,18 +533,38 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		self.screen.blit(self.truck,(self.truckObj[TruckNum].getPosition_x_Coordinates()-10,self.truckObj[TruckNum].getPosition_y_Coordinates()-10))
 		#print('truck moved on the curve')
 		
+	
+	def getOrderTruck(self,orderNumber):
+		'''
+		This method gets a new truck for an order if the first production site already had material at it
+		'''
+		truckNum = -1
+
+		for i in self.truckObj.keys():
+			#Checking to see if trucks are avaliable and they have enough capacity for the material that is needed
+			if self.truckObj[i].isTruckInUse() == False:
+				self.truckObj[i].setTruckUsage(True)
+				truckNum = i
+				self.orderInfo[orderNumber]['Truck Used'] = truckNum
+				break
+		
+		
+		if truckNum != -1: #this is true if a new truck was found for the 
+			self.truckObj[truckNum].setNewOrderForTruck(orderNumber)
+			self.setNewTruckForOrder(truckNum,self.orderInfo[orderNumber]['Current Node'])
+			
+		else:
+			pass
+	
 	def findTruckForOrder(self,orderNumber,resourseLocation,materialNeeded,Task):
 		'''
+		This gets a new truck for any order so the material is moved from the warehouse to the production site
 		Task = 1 if the truck is staying with the order the whole time
 		Task = 2 if the truck is just delviering material 
 		
 		'''
-		
+
 		truckNum = -1
-		'''
-		this gets a new truck for any order so it can be moved
-		'''
-		#change for part two or remove 
 		
 		for i in self.truckObj.keys():
 			#Checking to see if trucks are avaliable and they have enough capacity for the material that is needed
@@ -528,13 +578,13 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 			self.truckObj[truckNum].setNewOrderForTruck(orderNumber)
 			if Task == 1:
 				self.setNewTruckForOrder(truckNum,resourseLocation)
-				
+				self.orderInfo[orderNumber]['Truck Used'] = truckNum
 			else:
-				self.set
-			return truckNum
-		else:
+				self.setNewTruckForOrder(truckNum,resourseLocation)
 			
-			return None
+		else:
+			if Task == 1:
+				self.orderInfo[i]['Truck Used'] = None
 			
 	
 	
@@ -579,7 +629,7 @@ class World(AbstractWorld,AbstractVehicle, Graph, Trucks, Facilities):
 		for vertex in self.vtxPosit: #every vertex
 
 			#pygame.draw.rect(self.screen, self.blue,(self.vtxPosit[vertex][0]-2,self.vtxPosit[vertex][1]-2,4,4)) #The original code used	
-			pygame.draw.rect(self.screen, self.pple,(self.vtxPosit[vertex][0]-2,self.vtxPosit[vertex][1]-2,7,7)) #if you want nodes to be a different color
+			pygame.draw.rect(self.screen, self.pple,(self.vtxPosit[vertex][0]-2,self.vtxPosit[vertex][1]-2,4,4)) #if you want nodes to be a different color
 		for edge in self.line_list: 
 
 			for i in range(0,len(self.line_list[edge])-2):
