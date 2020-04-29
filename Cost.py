@@ -13,51 +13,63 @@ class Cost (object):
         self.trans_cost = 50
         self.weight_mx = 5 #weight multiplier 5 * weight of materials
         self.holding_cost = 5
+        self.HC_Order = {}
         self.order_rev = {}
-        self.order_cost = {}
+        self.h_cost = 0
+        self.t_cost = {}
         self.order_profit = {}
+        
+        self.totalRev = 0
+        self.totalCost = 0
+
     
-    def getETC(self, order, time,weight): #GET EXPECTED TRANSPORTATION COST, 
+    def getETC(self, order, weight): #GET EXPECTED TRANSPORTATION COST, 
+
+        ETC = (self.trans_cost+self.weight_mx*weight)
+        self.t_cost[order] += ETC
         
-        '''pseudocode structure
-        
-        for all trips in total trip
+    def getEHC (self,order,weight,lines): #lines has the lines and the current hold rate for each one at time 
+        #TOTAL ACCUMULATOR - TOTAL OVER THE ENTIRE SIMULATION
+        EHC = 0        
+        for line in lines: #WE WANT ALL MATERIALS AT ALL LINES
             
-            ETC += (self.trans_cost+self.weight_mx*weight)*time_trip
-        self.order_cost{order} = ETC
-        return ETC
+            EHC += lines[line]*5 #lines[LINE]
+                                 #SHOULD return a tonnage which the line is holding 
+                                 #and multiply by $5 for holding
         
-        '''
-    def getEHC (self,order,time,weight): #THIS MIGHT NOT BE NECESSARY, BECAUSE IF WE IMPLEMENT A DEVOTED TRUCK FOR THE ENTIRE TRIP, THERE SHOULD BE NO HOLDING COST
+        self.order_cost += EHC
+        #this ultimately gives us a total holding cost, not HC/t
         
-        '''BUT, pseudocode if neededmodule
         
-        for all line stops in tripcolor
-            
-            if time > time_needed
-                EHC = (time - time_needed)*weight*self.holding_cost
-        
-        self.order_cost{order} += EHC
-        return EHC
-        
-        '''
     def getRev (self,order,time): #Gets what we earn per car as made
-        '''pseudocode
-        
-        pass a complete order through here
-        
+               
         extra = time - 60
-        discount_magnitude = np.ceil(extra) * self.discount
+        discount_magnitude = np.ceil(extra/30) * self.discount
         car_af_discount = self.car_value - discount_magnitude
         
-        self.order_rev{order} = car_af_discount
-        return car_af_discount
+        self.order_rev[order] = car_af_discount
+
+    def getTProfit (self):
+        totalRev = 0
+        totalCost = 0
+        for order in self.order_rev:
+            totalRev += self.order_rev[order]
+        totalCost += self.h_cost
+        for order in self.t_cost:
+            totalCost += self.t_cost[order]
+        totalProfit = totalRev-totalCost
         
-        '''
-    def getProfit (self,order):
+        return totalProfit
         
-        return self.order_rev{order} - self.order_cost{order}
+    def printProfit (self):
         
+        PRev = "Total revenues for the day = $" + self.totalRev
+        PCost = "Total costs for the day = $" + self.totalCost
+        PProfit = "Total profit for the day = $" + self.getTProfit()
+        
+        print PRev
+        print PCost
+        print PProfit
         
         
         
